@@ -8,22 +8,24 @@ RYB =
   green:  [0,0.66,0.2]
   orange: [1,0.5,0]
   black:  [0.2,0.094,0.0]
-  
-  rgb: (r, y, b) ->
+
+  hex: (r, y, b) ->
     for i in [0..2]
-      RYB.white[i]  * (1-r) * (1 - b) * (1 - y) + 
-      RYB.red[i]    *    r  * (1 - b) * (1 - y) + 
-      RYB.blue[i]   * (1-r) *      b  * (1 - y) + 
-      RYB.violet[i] *    r  *      b  * (1 - y) +
-      RYB.yellow[i] * (1-r) * (1 - b) *      y  + 
-      RYB.orange[i] *     r * (1 - b) *      y  + 
-      RYB.green[i]  * (1-r) *      b  *      y  + 
-      RYB.black[i]  *     r *      b  *      y
+      (Math.floor(255 *
+        (
+          RYB.white[i]  * (1-r) * (1 - b) * (1 - y) + 
+          RYB.red[i]    *    r  * (1 - b) * (1 - y) + 
+          RYB.blue[i]   * (1-r) *      b  * (1 - y) + 
+          RYB.violet[i] *    r  *      b  * (1 - y) +
+          RYB.yellow[i] * (1-r) * (1 - b) *      y  + 
+          RYB.orange[i] *     r * (1 - b) *      y  + 
+          RYB.green[i]  * (1-r) *      b  *      y  + 
+          RYB.black[i]  *     r *      b  *      y
+        )) + 0x100).toString(16).substr(-2)
 
 class Points extends Array
   constructor: (number) ->
     base  = Math.ceil(Math.pow(number, 1/3))
-    console.log base
     @push [
       Math.floor( n / (base*base) ) / (base-1), 
       Math.floor( n / base % base ) / (base-1), 
@@ -31,6 +33,7 @@ class Points extends Array
     ] for n in [0...Math.pow(base, 3)]
     @picked  = null
     @plength = 0
+    @nbPoints = number
   
   distance: (p1) ->
     [0..2].map((i) => 
@@ -51,6 +54,11 @@ class Points extends Array
       @plength++
     return pick
 
+  asList: () ->
+    for i in [0..@nbPoints-1]
+      '#' + RYB.hex(@pick()...).join('')
+
+
 # Interface stuff, no need to use jQuery here
 
 numberColors = document.getElementById('number-colors')
@@ -62,13 +70,9 @@ generateColors = () ->
   number = parseInt(numberColors.value, 10)
   
   points = new Points(number)
-  point  = null
-  for i in [1..number]
-    point = points.pick(point)
-    [r,g,b] = RYB.rgb(point...).map((x) -> Math.floor(255*x))
-    color = "rgb(#{r}, #{g}, #{b})"
-    
+  for color in points.asList()    
     el = document.createElement "div"
+    [r,g,b] = color
 
     el.setAttribute "class", "color"
     el.style.backgroundColor = color
